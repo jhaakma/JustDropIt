@@ -35,7 +35,7 @@ event.register("playGroup", onNPCDying)
 
 --Reset orientation when ref is resurrected
 local function onRefResurrected(e)
-    if e.reference.data.justDropItOrientedOnDeath then
+    if e.reference.data and e.reference.data.justDropItOrientedOnDeath then
         orient.resetXYOrientation(e.reference)
         e.reference.data.justDropItOrientedOnDeath = nil
     end
