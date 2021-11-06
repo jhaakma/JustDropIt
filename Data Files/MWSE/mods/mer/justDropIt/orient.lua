@@ -74,6 +74,10 @@ function this.positionRef(ref, rayResult)
     ref.position = {ref.position.x, ref.position.y, newZ}
 end
 
+function this.resetXYOrientation(ref)
+    ref.orientation = { 0, 0, ref.orientation.z}
+end
+
 function this.orientRef(ref, rayResult)
     local UP = tes3vector3.new(0, 0, 1)
     local maxSteepness = math.rad(getMaxSteepness(ref))

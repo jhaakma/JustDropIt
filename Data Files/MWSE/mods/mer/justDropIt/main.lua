@@ -26,12 +26,21 @@ local function onNPCDying(e)
             local result = orient.getGroundBelowRef({ref = e.reference})
             if result then
                 orient.orientRef(e.reference, result)
+                e.reference.data.justDropItOrientedOnDeath = true
             end
         end
     end
 end
-
 event.register("playGroup", onNPCDying)
+
+--Reset orientation when ref is resurrected
+local function onRefResurrected(e)
+    if e.reference.data.justDropItOrientedOnDeath then
+        orient.resetXYOrientation(e.reference)
+        e.reference.data.justDropItOrientedOnDeath = nil
+    end
+end
+event.register("referenceActivated", onRefResurrected)
 
 --MCM MENU
 local function registerModConfig()
@@ -77,7 +86,7 @@ local function registerModConfig()
 
     template:createExclusionsPage{
         label = "Mod Blacklist",
-        descirption = "Add plugins to the blacklist, so any items added by the mod are not affected. ",
+        description = "Add plugins to the blacklist, so any items added by the mod are not affected. ",
         variable = mwse.mcm.createTableVariable{ id = "blacklist", table = config.mcmConfig},
         filters = {
             {
@@ -88,3 +97,4 @@ local function registerModConfig()
     }
 end
 event.register("modConfigReady", registerModConfig)
+
