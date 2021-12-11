@@ -7,15 +7,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    
+
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
           fetch-depth: 50
-        
+
       - name: Build Project
-        run: zip -r JustDropIt.zip "Data Files"
-  
+        uses: edgarrc/action-7z@v1
+        with:
+          args: 7z a JustDropIt.7z "Data Files"
+
       - name: Create Release
         uses: notlmn/release-with-changelog@v2
         with:
@@ -23,10 +25,10 @@ jobs:
           include-hash: true
           include-range: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          
+
       - name: Upload to Github
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: JustDropIt.zip
+          files: JustDropIt.7z
