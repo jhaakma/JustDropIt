@@ -17,11 +17,6 @@ jobs:
         uses: edgarrc/action-7z@v1
         with:
           args: 7z a JustDropIt.7z "Data Files"
-<<<<<<< HEAD
-
-=======
-   
->>>>>>> 9cfbddf09b82c0aca433a9e5843033cd5ba60c6a
       - name: Create Release
         uses: notlmn/release-with-changelog@v2
         with:
