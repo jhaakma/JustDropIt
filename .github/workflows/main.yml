@@ -1,13 +1,15 @@
-name: Package Just Drop it
+name: Just Drop It
 on:
   push:
     tags:
       - 'v*'
 jobs:
   build:
+    permissions: write-all
     runs-on: ubuntu-latest
+    env:
+      ARCHIVE_NAME: JustDropIt
     steps:
-
       - name: Checkout Code
         uses: actions/checkout@v2
         with:
@@ -16,12 +18,8 @@ jobs:
       - name: Build Project
         uses: edgarrc/action-7z@v1
         with:
-          args: 7z a JustDropIt.7z "Data Files"
-<<<<<<< HEAD
-
-=======
+          args: 7z a  ${{env.ARCHIVE_NAME}}.7z "Data Files"
    
->>>>>>> 9cfbddf09b82c0aca433a9e5843033cd5ba60c6a
       - name: Create Release
         uses: notlmn/release-with-changelog@v2
         with:
@@ -29,10 +27,10 @@ jobs:
           include-hash: true
           include-range: true
           token: ${{ secrets.GITHUB_TOKEN }}
-
+          
       - name: Upload to Github
         uses: softprops/action-gh-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          files: JustDropIt.7z
+          files: ${{env.ARCHIVE_NAME}}.7z
