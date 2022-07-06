@@ -1,5 +1,6 @@
 local mcmDefaultValues = {
     enabled = true,
+    logLevel = "INFO",
     noOrientNonStatic = false,
     orientOnDeath = true,
     maxSteepnessFlat = 50,
@@ -7,7 +8,7 @@ local mcmDefaultValues = {
     debug = false,
     blacklist = {
         ['ashfall.esp'] = true
-    }
+    },
 }
 local config = {
     --Mod name will be used for the MCM menu as well as the name of the config .json file.
@@ -17,7 +18,6 @@ local config = {
 [[
 When you drop an item, it will actually touch the ground! It also orients the item so it sits correctly on the ground.
 ]],
-    logLevel = "INFO"
 }
 config.mcmConfig = mwse.loadConfig(config.modName, mcmDefaultValues)
 
