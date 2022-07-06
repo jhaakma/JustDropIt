@@ -17,7 +17,7 @@ local config = {
 [[
 When you drop an item, it will actually touch the ground! It also orients the item so it sits correctly on the ground.
 ]],
-    
+    logLevel = "INFO"
 }
 config.mcmConfig = mwse.loadConfig(config.modName, mcmDefaultValues)
 

@@ -1,5 +1,9 @@
 local config = require('mer.justDropIt.config')
 local orient = require("mer.justDropIt.orient")
+local logger = require("logging.logger").new{
+    name = "Just Drop It",
+    logLevel = config.mcmConfig.logLevel
+}
 local modName = config.modName
 
 local deathAnimations = {
@@ -11,36 +15,48 @@ local deathAnimations = {
     [tes3.animationGroup.death4] = true,
     [tes3.animationGroup.death5] = true,
 }
+local validObjectTypes = {
+    [tes3.objectType.creature]=true,
+    [tes3.objectType.npc]=true
+}
 
 --Initialisation
 local function onItemDrop(e)
     if config.mcmConfig.enabled then
+        logger:debug("Orienting %s on itemDropped", e.reference)
         orient.orientRefToGround{ ref = e.reference }
     end
 end
 event.register("itemDropped", onItemDrop)
 
+---@param e playGroupEventData
 local function onNPCDying(e)
     if config.mcmConfig.enabled and config.mcmConfig.orientOnDeath then
         if deathAnimations[e.group] then
-            local result = orient.getGroundBelowRef({ref = e.reference})
-            if result then
-                orient.orientRef(e.reference, result)
-                e.reference.data.justDropItOrientedOnDeath = true
+            if not e.reference.data.justDropItOrientedOnDeath then
+                logger:debug("Orienting %s on death", e.reference)
+                local result = orient.getGroundBelowRef({ref = e.reference})
+                if result then
+                    orient.orientRef(e.reference, result)
+                    e.reference.data.justDropItOrientedOnDeath = true
+                end
             end
         end
     end
 end
 event.register("playGroup", onNPCDying)
 
---Reset orientation when ref is resurrected
+--Reset orientation when ref is resurrected manually
+---@param e mobileActivatedEventData
 local function onRefResurrected(e)
-    if e.reference.data and e.reference.data.justDropItOrientedOnDeath then
+    if validObjectTypes[e.reference.baseObject.objectType] then
+        logger:debug("Restoring vertical orientation of %s on referenceActivated", e.reference)
         orient.resetXYOrientation(e.reference)
         e.reference.data.justDropItOrientedOnDeath = nil
     end
 end
-event.register("referenceActivated", onRefResurrected)
+event.register("mobileActivated", onRefResurrected)
+
 
 --MCM MENU
 local function registerModConfig()
@@ -55,6 +71,22 @@ local function registerModConfig()
         label = string.format("Enable %s", modName),
         description = "Turn the mod on or off.",
         variable = mwse.mcm.createTableVariable{id = "enabled", table = config.mcmConfig}
+    }
+
+    settings:createDropdown{
+        label = "Log Level",
+        description = "Set the logging level for mwse.log. Keep on INFO unless you are debugging.",
+        options = {
+            { label = "TRACE", value = "TRACE"},
+            { label = "DEBUG", value = "DEBUG"},
+            { label = "INFO", value = "INFO"},
+            { label = "ERROR", value = "ERROR"},
+            { label = "NONE", value = "NONE"},
+        },
+        variable =  mwse.mcm.createTableVariable{ id = "logLevel", table = config.mcmConfig },
+        callback = function(self)
+            logger:setLogLevel(self.variable.value)
+        end
     }
 
     settings:createOnOffButton{
