@@ -57,6 +57,97 @@ local function onRefResurrected(e)
 end
 event.register("mobileActivated", onRefResurrected)
 
+---@param object tes3object|tes3light
+local function isCarryable(object)
+    local unCarryableTypes = {
+        [tes3.objectType.light] = true,
+        [tes3.objectType.container] = true,
+        [tes3.objectType.static] = true,
+        [tes3.objectType.door] = true,
+        [tes3.objectType.activator] = true,
+        [tes3.objectType.npc] = true,
+        [tes3.objectType.creature] = true,
+    }
+    if object then
+        if object.canCarry then
+            return true
+        end
+        local objType = object.objectType
+        if unCarryableTypes[objType] then
+            return false
+        end
+        return true
+    end
+end
+
+--Determine ref width using bounding box
+---@param reference tes3reference
+---@return number
+local function getMaxWidth(reference)
+    local bbox = reference.object.boundingBox
+    local width = math.max(
+        bbox.max.x - bbox.min.x,
+        bbox.max.y - bbox.min.y,
+        bbox.max.z - bbox.min.z
+    )
+    return width
+end
+
+---@param reference tes3reference
+local function dropNearbyObjects(reference, processedRefs)
+    processedRefs = processedRefs or {}
+    processedRefs[reference] = true
+    logger:debug("Dropping nearby objects for %s", reference)
+    local nearbyRefs = {}
+    for _, cell in pairs( tes3.getActiveCells() ) do
+        for nearbyRef in cell:iterateReferences() do
+            if not processedRefs[nearbyRef] then
+                if isCarryable(nearbyRef.baseObject) then
+                    local closeEnough = orient.getCloseEnough{
+                        ref1 = reference,
+                        ref2 = nearbyRef,
+                        distHorizontal = getMaxWidth(reference)
+                    }
+                    if closeEnough then
+                        table.insert(nearbyRefs, nearbyRef)
+                    end
+                end
+            end
+        end
+    end
+
+    --Sort from lowest to heighest
+    table.sort(nearbyRefs, function(a, b)
+        return a.position.z < b.position.z
+    end)
+    for _, nearbyRef in pairs(nearbyRefs) do
+        logger:debug("Dropping %s near %s", nearbyRef, reference)
+        local result = orient.getGroundBelowRef({ref = nearbyRef})
+        if result and result.reference == reference then
+            local safeParent = tes3.makeSafeObjectHandle(reference)
+            local parentZ = reference.position.z
+            local safeRef = tes3.makeSafeObjectHandle(nearbyRef)
+            timer.delayOneFrame(function()timer.delayOneFrame(function()
+                if safeParent:valid() and math.isclose(parentZ, reference.position.z) then
+                    logger:debug("Parent %s still exists and wasn't moved, don't bother dropping children", reference)
+                    return
+                end
+                if safeRef:valid() then
+                    dropNearbyObjects(nearbyRef, processedRefs)
+                    orient.orientRefToGround{ref = nearbyRef, ignoreBlackList = true}
+                end
+            end)end)
+        end
+    end
+end
+
+---@param e activateEventData
+local function onActivate(e)
+    if isCarryable(e.target.object) then
+        dropNearbyObjects(e.target)
+    end
+end
+event.register("activate", onActivate, {priority = 1000})
 
 --MCM MENU
 local function registerModConfig()

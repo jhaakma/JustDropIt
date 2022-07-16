@@ -91,21 +91,13 @@ end
 
 function this.getGroundBelowRef(e)
     local ref = e.ref
-    local offset = -ref.object.boundingBox.min.z + 5
+    local offset = 0
     if not ref then
         return
     end
-
-    -- if ref.baseObject.objectType == tes3.objectType.npc
-    --     or ref.baseObject.objectType == tes3.objectType.creature
-    -- then
-    --     offset = offset + 100
-    -- end
-
     local ignoreList = getIngoreList(ref)
     table.insert(ignoreList, ref)
-    local result =
-        tes3.rayTest {
+    local result = tes3.rayTest {
         position = {ref.position.x, ref.position.y, ref.position.z + offset},
         direction = {0, 0, -1},
         ignore = ignoreList,
@@ -129,7 +121,7 @@ end
 
 function this.orientRefToGround(params)
     local ref = params.ref
-    if isBlacklisted(ref) then
+    if isBlacklisted(ref) and not params.ignoreBlackList then
         return
     end
 
@@ -141,5 +133,17 @@ function this.orientRefToGround(params)
         end
     end
 end
+
+function this.getCloseEnough(e)
+    local maxDistanceHorizontal = e.distHorizontal or math.huge
+    local maxDistanceVertical = e.distVertical or math.huge
+    local pos1 = tes3vector3.new(e.ref1.position.x, e.ref1.position.y, 0)
+    local pos2 = tes3vector3.new(e.ref2.position.x, e.ref2.position.y, 0)
+    local distHorizontal = pos1:distance(pos2)
+    local distVertical = math.abs(e.ref1.position.z - e.ref2.position.z)
+    return  distHorizontal < maxDistanceHorizontal
+        and distVertical < maxDistanceVertical
+end
+
 
 return this
