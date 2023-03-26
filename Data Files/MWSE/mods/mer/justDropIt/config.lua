@@ -21,4 +21,6 @@ When you drop an item, it will actually touch the ground! It also orients the it
 }
 config.mcmConfig = mwse.loadConfig(config.modName, mcmDefaultValues)
 
+config.registeredItems = {}
+
 return config

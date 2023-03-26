@@ -1,9 +1,7 @@
+local common = require("mer.justDropIt.common")
 local config = require('mer.justDropIt.config')
 local orient = require("mer.justDropIt.orient")
-local logger = require("logging.logger").new{
-    name = "Just Drop It",
-    logLevel = config.mcmConfig.logLevel
-}
+
 local modName = config.modName
 
 local deathAnimations = {
@@ -23,19 +21,19 @@ local validObjectTypes = {
 --Initialisation
 local function onItemDrop(e)
     if config.mcmConfig.enabled then
-        logger:debug("Orienting %s on itemDropped", e.reference)
-        orient.orientRefToGround{ ref = e.reference }
+        common.logger:debug("Orienting %s on itemDropped", e.reference)
+        orient.orientRefToGround{ ref = e.reference, offset = 0}
     end
 end
-event.register("itemDropped", onItemDrop)
+event.register("itemDropped", onItemDrop, { priority = 10 })
 
 ---@param e playGroupEventData
 local function onNPCDying(e)
     if config.mcmConfig.enabled and config.mcmConfig.orientOnDeath then
         if deathAnimations[e.group] then
             if not e.reference.data.justDropItOrientedOnDeath then
-                logger:debug("Orienting %s on death", e.reference)
-                local result = orient.getGroundBelowRef({ref = e.reference})
+                common.logger:debug("Orienting %s on death", e.reference)
+                local result = orient.getGroundBelowRef({ref = e.reference, offset = 0})
                 if result then
                     orient.orientRef(e.reference, result)
                     e.reference.data.justDropItOrientedOnDeath = true
@@ -50,7 +48,7 @@ event.register("playGroup", onNPCDying)
 ---@param e mobileActivatedEventData
 local function onRefResurrected(e)
     if validObjectTypes[e.reference.baseObject.objectType] then
-        logger:debug("Restoring vertical orientation of %s on referenceActivated", e.reference)
+        common.logger:debug("Restoring vertical orientation of %s on referenceActivated", e.reference)
         orient.resetXYOrientation(e.reference)
         e.reference.data.justDropItOrientedOnDeath = nil
     end
@@ -93,11 +91,13 @@ local function getMaxWidth(reference)
     return width
 end
 
+
+
 ---@param reference tes3reference
 local function dropNearbyObjects(reference, processedRefs)
     processedRefs = processedRefs or {}
     processedRefs[reference] = true
-    logger:debug("Dropping nearby objects for %s", reference)
+    common.logger:debug("Dropping nearby objects for %s", reference)
     local nearbyRefs = {}
     for _, cell in pairs( tes3.getActiveCells() ) do
         for nearbyRef in cell:iterateReferences() do
@@ -121,22 +121,24 @@ local function dropNearbyObjects(reference, processedRefs)
         return a.position.z < b.position.z
     end)
     for _, nearbyRef in pairs(nearbyRefs) do
-        logger:debug("Dropping %s near %s", nearbyRef, reference)
-        local result = orient.getGroundBelowRef({ref = nearbyRef})
+        common.logger:debug("Dropping %s near %s", nearbyRef.id, reference.id)
+        local result = orient.getGroundBelowRef({ref = nearbyRef, offset = 0})
         if result and result.reference == reference then
             local safeParent = tes3.makeSafeObjectHandle(reference)
             local parentZ = reference.position.z
             local safeRef = tes3.makeSafeObjectHandle(nearbyRef)
-            timer.delayOneFrame(function()timer.delayOneFrame(function()
-                if safeParent:valid() and math.isclose(parentZ, reference.position.z) then
-                    logger:debug("Parent %s still exists and wasn't moved, don't bother dropping children", reference)
+            timer.delayOneFrame(function()timer.delayOneFrame(function()timer.delayOneFrame(function()timer.delayOneFrame(function()timer.delayOneFrame(function()timer.delayOneFrame(function()
+                if safeParent and safeParent:valid() and math.isclose(parentZ, reference.position.z) then
+                    common.logger:debug("Parent %s still exists and wasn't moved, don't bother dropping children", reference.id)
                     return
                 end
-                if safeRef:valid() then
+                if safeRef and safeRef:valid() then
                     dropNearbyObjects(nearbyRef, processedRefs)
-                    orient.orientRefToGround{ref = nearbyRef, ignoreBlackList = true}
+                    orient.orientRefToGround{ref = nearbyRef, ignoreBlackList = true, offset = 0}
                 end
-            end)end)
+            end)end)end)end)end)end)
+        else
+            common.logger:debug("Raytest from %s didn't return original reference %s, hit %s instead", nearbyRef, reference.id, result and result.reference)
         end
     end
 end
@@ -176,7 +178,7 @@ local function registerModConfig()
         },
         variable =  mwse.mcm.createTableVariable{ id = "logLevel", table = config.mcmConfig },
         callback = function(self)
-            logger:setLogLevel(self.variable.value)
+            common.logger:setLogLevel(self.variable.value)
         end
     }
 

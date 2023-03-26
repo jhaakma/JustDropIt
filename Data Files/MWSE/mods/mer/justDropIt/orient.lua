@@ -49,7 +49,15 @@ end
 local function getMaxSteepness(ref)
     local objType = ref.baseObject.objectType
     if objType == tes3.objectType.npc or objType == tes3.objectType.creature then return 60 end
-    return isTall(ref) and config.mcmConfig.maxSteepnessTall or config.mcmConfig.maxSteepnessFlat
+
+    local registeredItem = config.registeredItems[ref.baseObject.id:lower()]
+    if registeredItem and registeredItem.maxSteepness then
+        return registeredItem.maxSteepness
+    else
+        return isTall(ref)
+            and config.mcmConfig.maxSteepnessTall
+            or config.mcmConfig.maxSteepnessFlat
+    end
 end
 
 local function doOrient(result)
@@ -91,7 +99,7 @@ end
 
 function this.getGroundBelowRef(e)
     local ref = e.ref
-    local offset = 0
+    local offset = e.offset or 0 --ref.object.boundingBox.max.z-ref.object.boundingBox.min.z
     if not ref then
         return
     end
@@ -125,7 +133,7 @@ function this.orientRefToGround(params)
         return
     end
 
-    local result = this.getGroundBelowRef({ref = ref})
+    local result = this.getGroundBelowRef({ref = ref, offset = params.offset})
     if result then
         this.positionRef(ref, result)
         if doOrient(result) then
