@@ -6,13 +6,11 @@ local mcmDefaultValues = {
     maxSteepnessFlat = 50,
     maxSteepnessTall = 5,
     debug = false,
-    blacklist = {
-        ['ashfall.esp'] = true
-    },
+    blacklist = {},
 }
 local config = {
     --Mod name will be used for the MCM menu as well as the name of the config .json file.
-    modName = "Just Drop It!",
+    modName = "Just Drop It",
     --Description for the MCM sidebar
     modDescription =
 [[

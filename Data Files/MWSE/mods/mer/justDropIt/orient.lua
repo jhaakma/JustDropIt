@@ -78,7 +78,7 @@ function this.positionRef(ref, rayResult)
         return false
     end
     local bb = ref.object.boundingBox
-    local newZ = rayResult.intersection.z - bb.min.z
+    local newZ = rayResult.intersection.z - (bb.min.z * ref.scale)
     ref.position = {ref.position.x, ref.position.y, newZ}
 end
 
