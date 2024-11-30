@@ -4,9 +4,13 @@ description = "When you drop an item, it will actually touch the ground."
 homepage = "https://www.nexusmods.com/morrowind/mods/49557"
 repository = "https://github.com/jhaakma/JustDropIt"
 authors = [ "Merlord",]
-version = "1.1.5"
+version = "1.2.0"
 
 [dependencies]
-assets = ["MWSE/mods/mer/justDropIt"]
-mwse.buildnumber = 4173
-mge-xe.version = ">=0.17.0"
+assets = [ "MWSE/mods/mer/justDropIt",]
+
+[dependencies.mwse]
+buildnumber = 4173
+
+[dependencies.mge-xe]
+version = ">=0.17.0"
